@@ -1,18 +1,21 @@
 FROM python:3.8.11
 
+# Define arguments
+ARG USER_NAME
+ARG USER_UID
+ARG USER_GID
+
 # Configure environment
 ENV SHELL=/bin/bash
+ENV USER_HOME=/home/$USER_NAME
+ENV PROJECT_HOME=$USER_HOME/project
 
 # Create non-root user
-ARG USERNAME=python
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+RUN groupadd --gid $USER_GID $USER_NAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USER_NAME
 	
 # Force color prompt
-RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /home/$USERNAME/.bashrc
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /home/$USER_NAME/.bashrc
 
 # Install useful OS packages
 RUN apt-get update \
@@ -24,17 +27,16 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install useful Python packages
-RUN pip install --no-cache-dir pipenv
+RUN pip install --no-cache-dir \
+    pipenv==2022.4.8
 
-# Set project directory
-ARG PROJECT_DIR=/home/$USERNAME/project
-
-WORKDIR $PROJECT_DIR
-COPY Pipfile $PROJECT_DIR
-RUN chown -R $USER_UID:$USER_GID $PROJECT_DIR
+# Set working directory
+WORKDIR $PROJECT_HOME
+COPY Pipfile $PROJECT_HOME
+RUN chown -R $USER_UID:$USER_GID $PROJECT_HOME
 
 # Set user
-USER $USERNAME
+USER $USER_NAME
 
 # Install project dependencies
 RUN pipenv install --dev && pipenv --clear
