@@ -1,4 +1,4 @@
-from nltk import ne_chunk
+# from nltk import ne_chunk
 # from itertools import groupby
 # from nltk.corpus import wordnet as wn
 # from nltk.chunk import tree2conlltags
@@ -85,7 +85,7 @@ class EntityExtractor(BaseEstimator, TransformerMixin):
             yield self.get_entities(document)
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 #     from reader import PickledCorpusReader
 
 #     corpus = PickledCorpusReader('../corpus')
