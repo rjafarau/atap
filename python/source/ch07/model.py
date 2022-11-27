@@ -1,75 +1,75 @@
 #!/usr/bin/env python3
 
-import nltk
+# import nltk
 
 from math import log
-from collections import Counter, defaultdict
+# from collections import Counter, defaultdict
 
-from nltk.util import ngrams
-from nltk.probability import ProbDistI, FreqDist, ConditionalFreqDist
+# from nltk.util import ngrams
+# from nltk.probability import ProbDistI, FreqDist, ConditionalFreqDist
 
-from reader import PickledCorpusReader
-
-
-def count_ngrams(n, vocabulary, texts):
-    counter = NgramCounter(n, vocabulary)
-    counter.train_counts(texts)
-    return counter
+# from reader import PickledCorpusReader
 
 
-class NgramCounter(object):
-    """
-    The NgramCounter class counts ngrams given a vocabulary and ngram size.
-    """
+# def count_ngrams(n, vocabulary, texts):
+#     counter = NgramCounter(n, vocabulary)
+#     counter.train_counts(texts)
+#     return counter
 
-    def __init__(self, n, vocabulary, unknown="<UNK>"):
-        """
-        n is the size of the ngram
-        """
-        if n < 1:
-            raise ValueError("ngram size must be greater than or equal to 1")
 
-        self.n = n
-        self.unknown = unknown
-        self.padding = {
-            "pad_left": True,
-            "pad_right": True,
-            "left_pad_symbol": "<s>",
-            "right_pad_symbol": "</s>"
-        }
+# class NgramCounter(object):
+#     """
+#     The NgramCounter class counts ngrams given a vocabulary and ngram size.
+#     """
 
-        self.vocabulary = vocabulary
-        self.allgrams = defaultdict(ConditionalFreqDist)
-        self.ngrams = FreqDist()
-        self.unigrams = FreqDist()
+#     def __init__(self, n, vocabulary, unknown="<UNK>"):
+#         """
+#         n is the size of the ngram
+#         """
+#         if n < 1:
+#             raise ValueError("ngram size must be greater than or equal to 1")
 
-    def train_counts(self, training_text):
-        for sent in training_text:
-            checked_sent = (self.check_against_vocab(word) for word in sent)
-            sent_start = True
-            for ngram in self.to_ngrams(checked_sent):
-                self.ngrams[ngram] += 1
-                context, word = tuple(ngram[:-1]), ngram[-1]
-                if sent_start:
-                    for context_word in context:
-                        self.unigrams[context_word] += 1
-                    sent_start = False
+#         self.n = n
+#         self.unknown = unknown
+#         self.padding = {
+#             "pad_left": True,
+#             "pad_right": True,
+#             "left_pad_symbol": "<s>",
+#             "right_pad_symbol": "</s>"
+#         }
 
-                for window, ngram_order in enumerate(range(self.n, 1, -1)):
-                    context = context[window:]
-                    self.allgrams[ngram_order][context][word] += 1
-                self.unigrams[word] += 1
+#         self.vocabulary = vocabulary
+#         self.allgrams = defaultdict(ConditionalFreqDist)
+#         self.ngrams = FreqDist()
+#         self.unigrams = FreqDist()
 
-    def check_against_vocab(self, word):
-        if word in self.vocabulary:
-            return word
-        return self.unknown
+#     def train_counts(self, training_text):
+#         for sent in training_text:
+#             checked_sent = (self.check_against_vocab(word) for word in sent)
+#             sent_start = True
+#             for ngram in self.to_ngrams(checked_sent):
+#                 self.ngrams[ngram] += 1
+#                 context, word = tuple(ngram[:-1]), ngram[-1]
+#                 if sent_start:
+#                     for context_word in context:
+#                         self.unigrams[context_word] += 1
+#                     sent_start = False
 
-    def to_ngrams(self, sequence):
-        """
-        Wrapper for NLTK ngrams method
-        """
-        return ngrams(sequence, self.n, **self.padding)
+#                 for window, ngram_order in enumerate(range(self.n, 1, -1)):
+#                     context = context[window:]
+#                     self.allgrams[ngram_order][context][word] += 1
+#                 self.unigrams[word] += 1
+
+#     def check_against_vocab(self, word):
+#         if word in self.vocabulary:
+#             return word
+#         return self.unknown
+
+#     def to_ngrams(self, sequence):
+#         """
+#         Wrapper for NLTK ngrams method
+#         """
+#         return ngrams(sequence, self.n, **self.padding)
 
 
 class BaseNgramModel(object):
@@ -203,13 +203,13 @@ class KneserNeyModel(BaseNgramModel):
         return self.model.prob(sample)
 
 
-if __name__ == '__main__':
-    corpus = PickledCorpusReader('../corpus')
-    tokens = [''.join(word) for word in corpus.words()]
-    vocab = Counter(tokens)
-    sents = list([word[0] for word in sent] for sent in corpus.sents())
+# if __name__ == '__main__':
+#     corpus = PickledCorpusReader('../corpus')
+#     tokens = [''.join(word) for word in corpus.words()]
+#     vocab = Counter(tokens)
+#     sents = list([word[0] for word in sent] for sent in corpus.sents())
 
-    counter = count_ngrams(3, vocab, sents)
+#     counter = count_ngrams(3, vocab, sents)
     knm = KneserNeyModel(counter)
 
 
