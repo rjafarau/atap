@@ -2,7 +2,7 @@
 
 # import nltk
 
-from math import log
+# from math import log
 # from collections import Counter, defaultdict
 
 # from nltk.util import ngrams
@@ -72,53 +72,53 @@ from math import log
 #         return ngrams(sequence, self.n, **self.padding)
 
 
-class BaseNgramModel(object):
-    """
-    The BaseNgramModel creates an n-gram language model.
-    This base model is equivalent to a Maximum Likelihood Estimation.
-    """
+# class BaseNgramModel(object):
+#     """
+#     The BaseNgramModel creates an n-gram language model.
+#     This base model is equivalent to a Maximum Likelihood Estimation.
+#     """
 
-    def __init__(self, ngram_counter):
-        """
-        BaseNgramModel is initialized with an NgramCounter.
-        """
-        self.n = ngram_counter.n
-        self.ngram_counter = ngram_counter
-        self.ngrams = ngram_counter.ngrams
-        self._check_against_vocab = self.ngram_counter.check_against_vocab
+#     def __init__(self, ngram_counter):
+#         """
+#         BaseNgramModel is initialized with an NgramCounter.
+#         """
+#         self.n = ngram_counter.n
+#         self.ngram_counter = ngram_counter
+#         self.ngrams = ngram_counter.ngrams
+#         self._check_against_vocab = self.ngram_counter.check_against_vocab
 
-    def check_context(self, context):
-        """
-        Ensures that the context is not longer than or equal to the model's
-        n-gram order.
+#     def check_context(self, context):
+#         """
+#         Ensures that the context is not longer than or equal to the model's
+#         n-gram order.
 
-        Returns the context as a tuple.
-        """
-        if len(context) >= self.n:
-            raise ValueError("Context too long for this n-gram")
+#         Returns the context as a tuple.
+#         """
+#         if len(context) >= self.n:
+#             raise ValueError("Context too long for this n-gram")
 
-        return tuple(context)
+#         return tuple(context)
 
-    def score(self, word, context):
-        """
-        For a given string representation of a word, and a string word context,
-        returns the maximum likelihood score that the word will follow the
-        context.
-        """
-        context = self.check_context(context)
+#     def score(self, word, context):
+#         """
+#         For a given string representation of a word, and a string word context,
+#         returns the maximum likelihood score that the word will follow the
+#         context.
+#         """
+#         context = self.check_context(context)
 
-        return self.ngrams[context].freq(word)
+#         return self.ngrams[context].freq(word)
 
-    def logscore(self, word, context):
-        """
-        For a given string representation of a word, and a word context,
-        computes the log probability of this word in this context.
-        """
-        score = self.score(word, context)
-        if score == 0.0:
-            return float("-inf")
+#     def logscore(self, word, context):
+#         """
+#         For a given string representation of a word, and a word context,
+#         computes the log probability of this word in this context.
+#         """
+#         score = self.score(word, context)
+#         if score == 0.0:
+#             return float("-inf")
 
-        return log(score, 2)
+#         return log(score, 2)
 
     def entropy(self, text):
         """
