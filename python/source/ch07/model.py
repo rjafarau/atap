@@ -120,27 +120,27 @@
 
 #         return log(score, 2)
 
-    def entropy(self, text):
-        """
-        Calculate the approximate cross-entropy of the n-gram model for a
-        given text represented as a list of comma-separated strings.
-        This is the average log probability of each word in the text.
-        """
-        normed_text = (self._check_against_vocab(word) for word in text)
-        entropy = 0.0
-        processed_ngrams = 0
-        for ngram in self.ngram_counter.to_ngrams(normed_text):
-            context, word = tuple(ngram[:-1]), ngram[-1]
-            entropy += self.logscore(word, context)
-            processed_ngrams += 1
-        return - (entropy / processed_ngrams)
+#     def entropy(self, text):
+#         """
+#         Calculate the approximate cross-entropy of the n-gram model for a
+#         given text represented as a list of comma-separated strings.
+#         This is the average log probability of each word in the text.
+#         """
+#         normed_text = (self._check_against_vocab(word) for word in text)
+#         entropy = 0.0
+#         processed_ngrams = 0
+#         for ngram in self.ngram_counter.to_ngrams(normed_text):
+#             context, word = tuple(ngram[:-1]), ngram[-1]
+#             entropy += self.logscore(word, context)
+#             processed_ngrams += 1
+#         return - (entropy / processed_ngrams)
 
-    def perplexity(self, text):
-        """
-        Given list of comma-separated strings, calculates the perplexity
-        of the text.
-        """
-        return pow(2.0, self.entropy(text))
+#     def perplexity(self, text):
+#         """
+#         Given list of comma-separated strings, calculates the perplexity
+#         of the text.
+#         """
+#         return pow(2.0, self.entropy(text))
 
 
 class AddKNgramModel(BaseNgramModel):
