@@ -181,26 +181,26 @@
 #         super(LaplaceNgramModel, self).__init__(1, *args)
 
 
-class KneserNeyModel(BaseNgramModel):
-    """
-    Implements Kneser-Ney smoothing
-    """
-    def __init__(self, *args):
-        super(KneserNeyModel, self).__init__(*args)
-        self.model = nltk.KneserNeyProbDist(self.ngrams)
+# class KneserNeyModel(BaseNgramModel):
+#     """
+#     Implements Kneser-Ney smoothing
+#     """
+#     def __init__(self, *args):
+#         super(KneserNeyModel, self).__init__(*args)
+#         self.model = nltk.KneserNeyProbDist(self.ngrams)
 
-    def score(self, word, context):
-        """
-        Use KneserNeyProbDist from NLTK to get score
-        """
-        trigram = tuple((context[0], context[1], word))
-        return self.model.prob(trigram)
+#     def score(self, word, context):
+#         """
+#         Use KneserNeyProbDist from NLTK to get score
+#         """
+#         trigram = tuple((context[0], context[1], word))
+#         return self.model.prob(trigram)
 
-    def samples(self):
-        return self.model.samples()
+#     def samples(self):
+#         return self.model.samples()
 
-    def prob(self, sample):
-        return self.model.prob(sample)
+#     def prob(self, sample):
+#         return self.model.prob(sample)
 
 
 # if __name__ == '__main__':
@@ -210,7 +210,7 @@ class KneserNeyModel(BaseNgramModel):
 #     sents = list([word[0] for word in sent] for sent in corpus.sents())
 
 #     counter = count_ngrams(3, vocab, sents)
-    knm = KneserNeyModel(counter)
+#     knm = KneserNeyModel(counter)
 
 
     def complete(input_text):
