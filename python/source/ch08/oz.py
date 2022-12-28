@@ -3,10 +3,10 @@
 # import itertools
 # import networkx as nx
 
-import numpy as np
+# import numpy as np
 # import matplotlib.pyplot as plt
 
-from matplotlib.colors import LogNorm
+# from matplotlib.colors import LogNorm
 # from nltk import sent_tokenize, word_tokenize
 
 
@@ -20,19 +20,19 @@ from matplotlib.colors import LogNorm
 #                     cooccurring[pair] += 1
 #     return cooccurring
 
-def matrix(text, cast):
-    mtx = []
-    for first in cast:
-        row = []
-        for second in cast:
-            count = 0
-            for title, chapter in text['chapters'].items():
-                for sent in sent_tokenize(chapter):
-                    if first in sent and second in sent:
-                        count += 1
-            row.append(count)
-        mtx.append(row)
-    return mtx
+# def matrix(text, cast):
+#     mtx = []
+#     for first in cast:
+#         row = []
+#         for second in cast:
+#             count = 0
+#             for title, chapter in text['chapters'].items():
+#                 for sent in sent_tokenize(chapter):
+#                     if first in sent and second in sent:
+#                         count += 1
+#             row.append(count)
+#         mtx.append(row)
+#     return mtx
 
 
 # if __name__ == '__main__':
@@ -67,38 +67,38 @@ def matrix(text, cast):
         ##############################################
         # First make the matrices
         # By frequency
-        mtx = matrix(text,cast)
-        # And alphabetically
-        alpha_cast = sorted(cast)
-        alpha_mtx = matrix(text,alpha_cast)
+#         mtx = matrix(text,cast)
+#         # And alphabetically
+#         alpha_cast = sorted(cast)
+#         alpha_mtx = matrix(text,alpha_cast)
         
-        # Now create the plots
-        fig, ax = plt.subplots()
-        fig.suptitle('Character Co-occurrence in the Wizard of Oz', fontsize=12)
-        fig.subplots_adjust(wspace=.75)
+#         # Now create the plots
+#         fig, ax = plt.subplots()
+#         fig.suptitle('Character Co-occurrence in the Wizard of Oz', fontsize=12)
+#         fig.subplots_adjust(wspace=.75)
         
-        n = len(cast)
-        x_tick_marks = np.arange(n)
-        y_tick_marks = np.arange(n)
+#         n = len(cast)
+#         x_tick_marks = np.arange(n)
+#         y_tick_marks = np.arange(n)
         
-        ax1 = plt.subplot(121)
-        ax1.set_xticks(x_tick_marks)
-        ax1.set_yticks(y_tick_marks)
-        ax1.set_xticklabels(cast, fontsize=8, rotation=90)
-        ax1.set_yticklabels(cast, fontsize=8)
-        ax1.xaxis.tick_top()
-        ax1.set_xlabel("By Frequency")
-        plt.imshow(mtx, norm=matplotlib.colors.LogNorm(), interpolation='nearest', cmap='YlOrBr')
+#         ax1 = plt.subplot(121)
+#         ax1.set_xticks(x_tick_marks)
+#         ax1.set_yticks(y_tick_marks)
+#         ax1.set_xticklabels(cast, fontsize=8, rotation=90)
+#         ax1.set_yticklabels(cast, fontsize=8)
+#         ax1.xaxis.tick_top()
+#         ax1.set_xlabel("By Frequency")
+#         plt.imshow(mtx, norm=matplotlib.colors.LogNorm(), interpolation='nearest', cmap='YlOrBr')
         
-        ax2 = plt.subplot(122)
-        ax2.set_xticks(x_tick_marks)
-        ax2.set_yticks(y_tick_marks)
-        ax2.set_xticklabels(alpha_cast, fontsize=8, rotation=90)
-        ax2.set_yticklabels(alpha_cast, fontsize=8)
-        ax2.xaxis.tick_top()
-        ax2.set_xlabel("Alphabetically")
-        plt.imshow(alpha_mtx, norm=matplotlib.colors.LogNorm(), interpolation='nearest', cmap='YlOrBr')
-        plt.show()
+#         ax2 = plt.subplot(122)
+#         ax2.set_xticks(x_tick_marks)
+#         ax2.set_yticks(y_tick_marks)
+#         ax2.set_xticklabels(alpha_cast, fontsize=8, rotation=90)
+#         ax2.set_yticklabels(alpha_cast, fontsize=8)
+#         ax2.xaxis.tick_top()
+#         ax2.set_xlabel("Alphabetically")
+#         plt.imshow(alpha_mtx, norm=matplotlib.colors.LogNorm(), interpolation='nearest', cmap='YlOrBr')
+#         plt.show()
 
 
         
