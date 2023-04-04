@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-import heapq
+# import heapq
 import collections
 import seaborn as sns
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from operator import itemgetter
+# from operator import itemgetter
 
 from entities import pairs
 from reader import PickledCorpusReader
@@ -52,29 +52,29 @@ def graph(corpus):
     return G
 
 
-def nbest_centrality(G, metric, n=10, attr="centrality", **kwargs):
-    # Compute the centrality scores for each vertex
-    scores = metric(G, **kwargs)
+# def nbest_centrality(G, metric, n=10, attr="centrality", **kwargs):
+#     # Compute the centrality scores for each vertex
+#     scores = metric(G, **kwargs)
 
-    # Set the score as a property on each node
-    nx.set_node_attributes(G, name=attr, values=scores)
+#     # Set the score as a property on each node
+#     nx.set_node_attributes(G, name=attr, values=scores)
 
-    # Find the top n scores and print them along with their index
-    topn = heapq.nlargest(n, scores.items(), key=itemgetter(1))
-    for idx, item in enumerate(topn):
-        print("{}. {}: {:0.4f}".format(idx + 1, *item))
+#     # Find the top n scores and print them along with their index
+#     topn = heapq.nlargest(n, scores.items(), key=itemgetter(1))
+#     for idx, item in enumerate(topn):
+#         print("{}. {}: {:0.4f}".format(idx + 1, *item))
 
-    return G
+#     return G
 
 if __name__ == '__main__':
     corpus = PickledCorpusReader('../corpus')
     G = graph(corpus)
 
-    # # Write the graph to disk, if needed
-    # nx.write_graphml(G, "entities.graphml")
+    # Write the graph to disk, if needed
+    nx.write_graphml(G, "entities.graphml")
 
-    # # Get summary stats for the full graph
-    # print(nx.info(G))
+    # Get summary stats for the full graph
+    print(nx.info(G))
 
     # # find the most central entities in the social network
     # print("Degree centrality")
@@ -82,16 +82,16 @@ if __name__ == '__main__':
     # print("Betweenness centrality")
     # nbest_centrality(G, nx.betweenness_centrality, 10, "betweenness", normalized=True)
 
-    # # Extract and visualize an ego graph
-    # H = nx.ego_graph(G, "Hollywood")
-    # edges, weights = zip(*nx.get_edge_attributes(C, "weight").items())
-    # pos = nx.spring_layout(C, k=0.3, iterations=40)
-    # nx.draw(
-    #     C, pos, node_color="skyblue", node_size=20, edgelist=edges,
-    #     edge_color=weights, width=0.25, edge_cmap=plt.cm.Pastel2,
-    #     with_labels=True, font_size=6, alpha=0.8)
-    # plt.show()
-    # plt.savefig("atap_ch09_hollywood_entity_graph.png", transparent=True)
+    # Extract and visualize an ego graph
+    H = nx.ego_graph(G, "Hollywood")
+    edges, weights = zip(*nx.get_edge_attributes(C, "weight").items())
+    pos = nx.spring_layout(C, k=0.3, iterations=40)
+    nx.draw(
+        C, pos, node_color="skyblue", node_size=20, edgelist=edges,
+        edge_color=weights, width=0.25, edge_cmap=plt.cm.Pastel2,
+        with_labels=True, font_size=6, alpha=0.8)
+    plt.show()
+    plt.savefig("atap_ch09_hollywood_entity_graph.png", transparent=True)
 
     # # Compare centrality measures for an ego graph
     # print("Closeness centrality for Hollywood")
@@ -103,36 +103,36 @@ if __name__ == '__main__':
     # print("Katz centrality for Hollywood")
     # nbest_centrality(H, nx.katz_centrality_numpy, 10, "katz")
 
-    # T = nx.ego_graph(G, "Twitter")
-    # E = nx.ego_graph(G, "Earth")
+    T = nx.ego_graph(G, "Twitter")
+    E = nx.ego_graph(G, "Earth")
 
-    # # Examine degree distributions with histograms
-    # sns.distplot(
-    #     [G.degree(v) for v in G.nodes()], norm_hist=True
-    # )
-    # plt.show()
-    #
-    # sns.distplot(
-    #     [H.degree(v) for v in H.nodes()], norm_hist=True
-    # )
-    # plt.show()
-    #
-    # sns.distplot(
-    #     [T.degree(v) for v in T.nodes()], norm_hist=True
-    # )
-    # plt.show()
-    #
-    # sns.distplot(
-    #     [E.degree(v) for v in E.nodes()], norm_hist=True
-    # )
-    # plt.show()
-    #
-    # print("Baleen Entity Graph")
-    # print("Transitivity: {}".format(nx.transitivity(G)))
-    # print("Average clustering coefficient: {}".format(nx.average_clustering(G)))
-    # print("Number of cliques: {}".format(nx.graph_number_of_cliques(G)))
-    #
-    # print("Hollywood Ego Graph")
-    # print("Transitivity: {}".format(nx.transitivity(H)))
-    # print("Average clustering coefficient: {}".format(nx.average_clustering(H)))
-    # print("Number of cliques: {}".format(nx.graph_number_of_cliques(H)))
+    # Examine degree distributions with histograms
+    sns.distplot(
+        [G.degree(v) for v in G.nodes()], norm_hist=True
+    )
+    plt.show()
+    
+    sns.distplot(
+        [H.degree(v) for v in H.nodes()], norm_hist=True
+    )
+    plt.show()
+    
+    sns.distplot(
+        [T.degree(v) for v in T.nodes()], norm_hist=True
+    )
+    plt.show()
+    
+    sns.distplot(
+        [E.degree(v) for v in E.nodes()], norm_hist=True
+    )
+    plt.show()
+    
+    print("Baleen Entity Graph")
+    print("Transitivity: {}".format(nx.transitivity(G)))
+    print("Average clustering coefficient: {}".format(nx.average_clustering(G)))
+    print("Number of cliques: {}".format(nx.graph_number_of_cliques(G)))
+    
+    print("Hollywood Ego Graph")
+    print("Transitivity: {}".format(nx.transitivity(H)))
+    print("Average clustering coefficient: {}".format(nx.average_clustering(H)))
+    print("Number of cliques: {}".format(nx.graph_number_of_cliques(H)))
