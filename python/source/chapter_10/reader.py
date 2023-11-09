@@ -1,5 +1,6 @@
 import os
 import time
+import pickle
 import logging
 
 import bs4
@@ -15,7 +16,7 @@ logger = logging.getLogger("readability.readability")
 logger.disabled = True
 
 DOC_PATTERN = r'(?!\.)[a-z_\s]+/[\w\s\d\-]+\.html'
-PKL_PATTERN = r'(?!\.)[a-z_\s]+/[a-f0-9]+\.pickle'
+PKL_PATTERN = r'(?!\.)[a-z_\s]+/[a-f\d\-]+\.pickle'
 CAT_PATTERN = r'([a-z_\s]+)/.*'
 
 # Tags to extract as paragraphs from the HTML text
@@ -335,7 +336,7 @@ class HTMLPickledCorpusReader(CategorizedCorpusReader, CorpusReader):
 
         # Compute the number of files and categories in the corpus
         n_fileids = len(self.resolve(fileids, categories) or self.fileids())
-        n_topics = len(self.categories(self.resolve(fileids, categories)))
+        n_categories = len(self.categories(self.resolve(fileids, categories)))
 
         # Return data structure with information
         return {

@@ -129,7 +129,7 @@ class Preprocessor(object):
         # Create a data structure for the pickle
         document = {
             'title': list(self.titles(fileid)),
-            'document': list(self.tokenize(fileid))
+            'content': list(self.tokenize(fileid))
         }
 
         # Open and serialize the pickle to disk
