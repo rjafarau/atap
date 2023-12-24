@@ -126,7 +126,7 @@ class HTMLCorpusReader(CategorizedCorpusReader, CorpusReader):
 
     def words(self, fileids=None, categories=None):
         """
-        Uses the built in word tokenizer to extract tokens from sentences.
+        Uses the built in word tokenizer to extract words from sentences.
         Note that this method uses BeautifulSoup to parse HTML content.
         """
         for sentence in self.sents(fileids, categories):
@@ -164,7 +164,7 @@ class HTMLCorpusReader(CategorizedCorpusReader, CorpusReader):
 
         # Structures to perform counting.
         counts = nltk.FreqDist()
-        tokens = nltk.FreqDist()
+        words = nltk.FreqDist()
 
         # Perform single pass over paragraphs, tokenize and count
         for para in self.paras(fileids, categories):
@@ -175,7 +175,7 @@ class HTMLCorpusReader(CategorizedCorpusReader, CorpusReader):
 
                 for word in self._word_tokenizer.tokenize(sent):
                     counts['words'] += 1
-                    tokens[word] += 1
+                    words[word] += 1
 
         # Compute the number of files and categories in the corpus
         n_fileids = len(self.resolve(fileids, categories) or self.fileids())
@@ -188,8 +188,8 @@ class HTMLCorpusReader(CategorizedCorpusReader, CorpusReader):
             'paras': counts['paras'],
             'sents': counts['sents'],
             'words': counts['words'],
-            'vocab': len(tokens),
-            'lexdiv': counts['words'] / len(tokens),
+            'vocab': len(words),
+            'lexdiv': counts['words'] / len(words),
             'ppdoc': counts['paras'] / n_fileids,
             'sppar': counts['sents'] / counts['paras'],
             'secs': time.perf_counter() - started,
@@ -265,7 +265,7 @@ class HTMLPickledCorpusReader(CategorizedCorpusReader, CorpusReader):
     def tagged_paras(self, fileids=None, categories=None):
         """
         Returns a generator of paragraphs where each paragraph is a list of
-        sentences, which is in turn a list of (token, tag) tuples.
+        sentences, which is in turn a list of (word, tag) tuples.
         """
         for doc in self.docs(fileids, categories):
             for tagged_para in doc['content']:
@@ -274,7 +274,7 @@ class HTMLPickledCorpusReader(CategorizedCorpusReader, CorpusReader):
     def paras(self, fileids=None, categories=None):
         """
         Returns a generator of paragraphs where each paragraph is a list of
-        sentences, which is in turn a list of tokens.
+        sentences, which is in turn a list of words.
         """
         for tagged_para in self.tagged_paras(fileids, categories):
             yield [[word for word, tag in tagged_sent]
@@ -283,7 +283,7 @@ class HTMLPickledCorpusReader(CategorizedCorpusReader, CorpusReader):
     def tagged_sents(self, fileids=None, categories=None):
         """
         Returns a generator of sentences where each sentence is a list of
-        (token, tag) tuples.
+        (word, tag) tuples.
         """
         for tagged_para in self.tagged_paras(fileids, categories):
             for tagged_sent in tagged_para:
@@ -292,22 +292,22 @@ class HTMLPickledCorpusReader(CategorizedCorpusReader, CorpusReader):
     def sents(self, fileids=None, categories=None):
         """
         Returns a generator of sentences where each sentence is a list of
-        tokens.
+        words.
         """
         for tagged_sent in self.tagged_sents(fileids, categories):
             yield [word for word, tag in tagged_sent]
 
     def tagged_words(self, fileids=None, categories=None):
         """
-        Returns a generator of (token, tag) tuples.
+        Returns a generator of (word, tag) tuples.
         """
         for sent in self.tagged_sents(fileids, categories):
-            for token, tag in sent:
-                yield token, tag
+            for word, tag in sent:
+                yield word, tag
 
     def words(self, fileids=None, categories=None):
         """
-        Returns a generator of tokens.
+        Returns a generator of words.
         """
         for word, tag in self.tagged_words(fileids, categories):
             yield word
@@ -321,7 +321,7 @@ class HTMLPickledCorpusReader(CategorizedCorpusReader, CorpusReader):
 
         # Structures to perform counting.
         counts = nltk.FreqDist()
-        tokens = nltk.FreqDist()
+        words = nltk.FreqDist()
 
         # Perform single pass over paragraphs, tokenize and count
         for para in self.tagged_paras(fileids, categories):
@@ -332,7 +332,7 @@ class HTMLPickledCorpusReader(CategorizedCorpusReader, CorpusReader):
 
                 for word, tag in sent:
                     counts['words'] += 1
-                    tokens[word] += 1
+                    words[word] += 1
 
         # Compute the number of files and categories in the corpus
         n_fileids = len(self.resolve(fileids, categories) or self.fileids())
@@ -345,8 +345,8 @@ class HTMLPickledCorpusReader(CategorizedCorpusReader, CorpusReader):
             'paras': counts['paras'],
             'sents': counts['sents'],
             'words': counts['words'],
-            'vocab': len(tokens),
-            'lexdiv': counts['words'] / len(tokens),
+            'vocab': len(words),
+            'lexdiv': counts['words'] / len(words),
             'ppdoc': counts['paras'] / n_fileids,
             'sppar': counts['sents'] / counts['paras'],
             'secs': time.perf_counter() - started,
