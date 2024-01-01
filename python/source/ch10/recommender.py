@@ -10,10 +10,10 @@ from nltk import wordpunct_tokenize
 from sklearn.externals import joblib
 from sklearn.neighbors import BallTree, KDTree
 from sklearn.decomposition import TruncatedSVD
-from sklearn.neighbors import NearestNeighbors, LSHForest
-from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.neighbors import NearestNeighbors
+from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.feature_extraction.text import TfidfVectorizer, HashingVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from transformer import TextNormalizer
 from reader import HTMLPickledCorpusReader
@@ -25,11 +25,6 @@ class KNNTransformer(NearestNeighbors, TransformerMixin):
     so give it one.
     """
     def __init__(self, k=3, **kwargs):
-        """
-        Note: tried LSHForest, still too slow
-        :param k:
-        :param kwargs:
-        """
         self.model = NearestNeighbors(n_neighbors=k, **kwargs)
 
     def fit(self, documents):
@@ -43,23 +38,23 @@ class KNNTransformer(NearestNeighbors, TransformerMixin):
         ]
 
 
-class BallTreeTransformer(NearestNeighbors, TransformerMixin):
-    """
-    Scikit-Learn's BallTree doesn't have a transform method,
-    so give it one.
+# class BallTreeTransformer(NearestNeighbors, TransformerMixin):
+#     """
+#     Scikit-Learn's BallTree doesn't have a transform method,
+#     so give it one.
 
-    Note: didn't end up needing this
-    """
-    def __init__(self, **kwargs):
-        self.model = None
+#     Note: didn't end up needing this
+#     """
+#     def __init__(self, **kwargs):
+#         self.model = None
 
-    def fit(self, documents):
-        return self
+#     def fit(self, documents):
+#         return self
 
-    def transform(self, documents):
-        return [
-            BallTree(documents)
-        ]
+#     def transform(self, documents):
+#         return [
+#             BallTree(documents)
+#         ]
 
 def timeit(func):
     @wraps(func)
