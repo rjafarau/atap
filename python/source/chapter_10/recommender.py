@@ -25,7 +25,7 @@ class KNNRecommender(BaseEstimator, TransformerMixin):
     def __init__(self,
                  n_components=100,
                  n_neighbors=3,
-                 algorithm='ball_tree'):
+                 algorithm='auto'):
         self.n_components = n_components
         self.n_neighbors = n_neighbors
         self.algorithm = algorithm
@@ -42,6 +42,7 @@ class KNNRecommender(BaseEstimator, TransformerMixin):
         Load a pickled knn recommender from disk, if it exists
         """
         self.pipeline = joblib.load(path)
+        return self
 
     def save(self, path):
         """
