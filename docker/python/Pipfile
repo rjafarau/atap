@@ -24,7 +24,6 @@ humanize = "==4.4.0"
 python-Levenshtein = "==0.20.9"
 yellowbrick = "==1.5"
 pytest = "==7.4.0"
-ipytest = "==0.13.3"
 
 [requires]
 python_version = "3.8.11"

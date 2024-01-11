@@ -1,11 +1,14 @@
 import joblib
 
+import nltk
+
 from sklearn.decomposition import TruncatedSVD
 from sklearn.neighbors import NearestNeighbors
 from sklearn.pipeline import Pipeline
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+from dialog import Dialog
 from transformer import TextNormalizer
 
 
@@ -56,3 +59,41 @@ class KNNRecommender(BaseEstimator, TransformerMixin):
 
     def transform(self, documents):
         return self.pipeline.transform(documents)
+
+
+class RecipeRecommender(Dialog):
+    """
+    Recipe recommender dialog
+    """
+    def __init__(self, recipes, recommender_path):
+        self.recipes = recipes
+        self.recommender = (KNNRecommender()
+                            .load(recommender_path))
+
+    def parse(self, text):
+        """
+        Extract ingredients from the text
+        """
+        return nltk.pos_tag(nltk.wordpunct_tokenize(text))
+
+    def interpret(self, sent, **kwargs):
+        nouns = [(word, tag)
+                 for word, tag in sent
+                 if tag.startswith('N')]
+        confidence = len(nouns) / len(sent)
+        return nouns, confidence, kwargs
+
+    def respond(self, nouns, confidence, **kwargs):
+        """
+        Returns a recommendation if the confidence
+        is greater than 0.15 otherwise None.
+        """
+        if confidence < 0.15:
+            return None
+        ingredients = [noun for noun, tag in nouns]
+        model_input = [{'content': [[nouns]]}]
+        return '\n'.join([
+            f"Here are some recipes related to {', '.join(ingredients)}",
+            *[f'- {self.recipes[idx][0]}'
+              for idx in self.recommender.transform(model_input)[0]]
+        ])
