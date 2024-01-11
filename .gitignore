@@ -99,5 +99,6 @@ nltk_data/
 # ignore
 ignore/
 DRAFT*
+.Trash-1000/
 
 *.idea
