@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 class TextNormalizer(BaseEstimator, TransformerMixin):
 
     def __init__(self, language='english',
-                 join=True, return_list=True):
+                 join=False, return_list=False):
         self.language = language
         self.stopwords = set(nltk.corpus.stopwords.words(language))
         self.lemmatizer = nltk.WordNetLemmatizer()
@@ -26,7 +26,7 @@ class TextNormalizer(BaseEstimator, TransformerMixin):
     def normalize(self, document):
         return [
             self.lemmatize(word, tag).lower()
-            for paragraph in document['content']
+            for paragraph in document
             for sentence in paragraph
             for word, tag in sentence
             if not self.is_punct(word)
@@ -53,3 +53,7 @@ class TextNormalizer(BaseEstimator, TransformerMixin):
         if self.return_list:
             normalized = list(normalized)
         return normalized
+
+
+def identity(doc):
+    return doc

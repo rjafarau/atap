@@ -54,21 +54,13 @@ class HTMLPickledCorpusReader(CategorizedCorpusReader, CorpusReader):
             with open(path, 'rb') as f:
                 yield pickle.load(f)
 
-    def titles(self, fileids=None, categories=None):
-        """
-        Uses BeautifulSoup to identify titles from the
-        head tags within the HTML
-        """
-        for doc in self.docs(fileids, categories):
-            yield doc['title']
-
     def tagged_paras(self, fileids=None, categories=None):
         """
         Returns a generator of paragraphs where each paragraph is a list of
         sentences, which is in turn a list of (word, tag) tuples.
         """
         for doc in self.docs(fileids, categories):
-            for tagged_para in doc['content']:
+            for tagged_para in doc:
                 yield tagged_para
 
     def paras(self, fileids=None, categories=None):
