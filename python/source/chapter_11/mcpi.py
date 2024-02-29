@@ -1,13 +1,11 @@
-
 import time
 import random
+import functools
 import multiprocessing as mp
-
-from functools import wraps
 
 
 def timeit(func):
-    @wraps(func)
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         start = time.time()
         result = func(*args, **kwargs)
@@ -36,17 +34,7 @@ def mcpi_sequential(N):
 @timeit
 def mcpi_parallel(N):
     procs = mp.cpu_count()
-    pool  = mp.Pool(processes=procs)
-
-    parts = [int(N/procs)] * procs
-    count = sum(pool.map(mcpi_samples, parts))
+    parts = [int(N / procs)] * procs
+    with mp.Pool(processes=procs) as pool:
+        count = sum(pool.map(mcpi_samples, parts))
     return count / N * 4
-
-
-if __name__ == '__main__':
-    N = 10000000
-    pi, delta = mcpi_sequential(N)
-    print("sequential pi: {} in {:0.2f} seconds".format(pi, delta))
-
-    pi, delta = mcpi_parallel(N)
-    print("parallel pi: {} in {:0.2f} seconds".format(pi, delta))
