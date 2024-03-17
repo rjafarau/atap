@@ -2,19 +2,19 @@
 
 ## Imports
 import os
+import operator
+import functools
+
 import nltk
+import tabulate
 
-from tabulate import tabulate
-from functools import partial
-from operator import itemgetter, add
-from pyspark.sql import SparkSession
-from pyspark import SparkConf, SparkContext
+from sc_template import confugure_spark
 
-tabulate = partial(tabulate, tablefmt="simple", headers="firstrow")
 
 ## Module Constants
-APP_NAME = "Label and Bigram Count"
-CORPUS = "text_corpus/corpus/*/*.txt"
+APP_NAME = 'Label and Bigram Count'
+CORPUS = '/home/python/project/data/hobbies/*/*.txt'
+
 
 ## Closure Functions
 def parse_label(path):
@@ -24,26 +24,32 @@ def parse_label(path):
 
 ## Analysis Operations
 def count_labels(corpus):
-    labels = corpus.map(itemgetter(0)).map(parse_label)
-    label_count = labels.map(lambda l: (l, 1)).reduceByKey(add)
-
-    table = [["Label", "Count"]]
+    labels = (corpus
+              .map(operator.itemgetter(0))
+              .map(parse_label))
+    label_count = (labels
+                   .map(lambda l: (l, 1))
+                   .reduceByKey(operator.add))
+    table = [['Label', 'Count']]
     table.extend([
         [label, count] for label, count in label_count.collect()
     ])
-    print(tabulate(table))
+    print(tabulate.tabulate(table, tablefmt='simple', headers='firstrow'))
 
 
 def count_bigrams(corpus):
-    text = corpus.map(itemgetter(1))
+    text = corpus.map(operator.itemgetter(1))
     sents = text.flatMap(nltk.sent_tokenize)
     sents = sents.map(lambda s: list(nltk.word_tokenize(s)))
 
     bigrams = sents.flatMap(lambda s: list(nltk.bigrams(s)))
     unique_bigrams = bigrams.distinct().count()
-    print("unique bigrams: {}".format(unique_bigrams))
+    print('unique bigrams: {}'.format(unique_bigrams))
 
-    bigram_counts = bigrams.map(lambda g: (g, 1)).reduceByKey(add).toDF()
+    bigram_counts = (bigrams
+                     .map(lambda g: (g, 1))
+                     .reduceByKey(operator.add)
+                     .toDF())
     print(bigram_counts.head())
 
 
@@ -58,13 +64,9 @@ def main(sc, spark):
     count_bigrams(corpus)
 
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Configure Spark
-    conf  = SparkConf().setAppName(APP_NAME)
-    conf  = conf.setMaster("local[*]")
-    sc    = SparkContext(conf=conf)
-    spark = SparkSession(sc)
+    sc, spark = confugure_spark(APP_NAME)
 
     # Execute Main functionality
     main(sc, spark)
