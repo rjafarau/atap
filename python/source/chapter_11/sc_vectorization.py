@@ -75,11 +75,16 @@ def make_vectorizer(stopwords=True, tfidf=True, n_features=4096):
 
 ## Main functionality
 def main(sc, spark):
+    # Load corpus
     corpus = load_corpus(sc, spark, CORPUS)
-    vector = make_vectorizer().fit(corpus)
+    
+    # Fit vectorizer pipeline
+    vectorizer = make_vectorizer()
+    vectorizer = vectorizer.fit(corpus)
 
-    corpus = vector.transform(corpus)
-    print(corpus.head())
+    # Create vectors
+    vectors = vectorizer.transform(corpus)
+    print(vectors.head())
 
 
 if __name__ == '__main__':
