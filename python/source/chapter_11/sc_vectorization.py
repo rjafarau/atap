@@ -3,16 +3,20 @@
 ## Imports
 import os
 
-from pyspark.sql import SparkSession
-from pyspark import SparkConf, SparkContext
-
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import StopWordsRemover, NGram
-from pyspark.ml.feature import Tokenizer, HashingTF, IDF
+from pyspark.ml.feature import (
+    Tokenizer, RegexTokenizer,
+    HashingTF, IDF
+)
+
+from sc_template import confugure_spark
+
 
 ## Module Constants
-APP_NAME = "Text Vectorization"
-CORPUS = "text_corpus/corpus/*/*.txt"
+APP_NAME = 'Text Vectorization'
+CORPUS = '/home/python/project/data/hobbies/*/*.txt'
+
 
 ## Closure Functions
 def parse_label(path):
@@ -21,26 +25,30 @@ def parse_label(path):
 
 
 ## Data Manipulation
-def load_corpus(sc, spark, path=CORPUS):
+def load_corpus(sc, spark, path):
     # Load data from disk and transform into a DataFrame
     data = sc.wholeTextFiles(path)
     corpus = data.map(lambda d: (parse_label(d[0]), d[1]))
-    return spark.createDataFrame(corpus, ["label", "text"])
+    return spark.createDataFrame(corpus, ['label', 'text'])
 
 
-def make_vectorizer(stopwords=True, tfidf=True, n_features=5000):
+def make_vectorizer(stopwords=True, tfidf=True, n_features=4096):
     # Creates a vectorization pipeline that starts with tokenization
     stages = [
-        Tokenizer(inputCol="text", outputCol="tokens"),
+        Tokenizer(
+            inputCol='text',
+            outputCol='tokens'
+        )
     ]
 
     # Append stopwords to the pipeline if requested
     if stopwords:
         stages.append(
             StopWordsRemover(
-                caseSensitive=False, outputCol="filtered_tokens",
+                caseSensitive=False,
                 inputCol=stages[-1].getOutputCol(),
-            ),
+                outputCol='filtered_tokens',
+            )
         )
 
     # Create the Hashing term frequency vectorizer
@@ -48,14 +56,17 @@ def make_vectorizer(stopwords=True, tfidf=True, n_features=5000):
         HashingTF(
             numFeatures=n_features,
             inputCol=stages[-1].getOutputCol(),
-            outputCol="frequency"
+            outputCol='frequency'
         )
     )
 
     # Append the IDF vectorizer if requested
     if tfidf:
         stages.append(
-            IDF(inputCol=stages[-1].getOutputCol(), outputCol="tfidf")
+            IDF(
+                inputCol=stages[-1].getOutputCol(),
+                outputCol='tfidf'
+            )
         )
 
     # Return the completed pipeline
@@ -64,20 +75,21 @@ def make_vectorizer(stopwords=True, tfidf=True, n_features=5000):
 
 ## Main functionality
 def main(sc, spark):
-    corpus = load_corpus(sc, spark)
-    vector = vectorize().fit(corpus)
+    # Load corpus
+    corpus = load_corpus(sc, spark, CORPUS)
 
-    corpus = vector.transform(corpus)
-    print(corpus.head())
+    # Fit vectorizer pipeline
+    vectorizer = make_vectorizer()
+    vectorizer = vectorizer.fit(corpus)
+
+    # Create vectors
+    vectors = vectorizer.transform(corpus)
+    print(vectors.head())
 
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Configure Spark
-    conf  = SparkConf().setAppName(APP_NAME)
-    conf  = conf.setMaster("local[*]")
-    sc    = SparkContext(conf=conf)
-    spark = SparkSession(sc)
+    sc, spark = confugure_spark(APP_NAME)
 
     # Execute Main functionality
     main(sc, spark)

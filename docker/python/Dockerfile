@@ -1,4 +1,4 @@
-FROM python:3.8.11
+FROM spark:3.5.1
 
 # Define arguments
 ARG USER_NAME
@@ -10,12 +10,15 @@ ENV SHELL=/bin/bash
 ENV USER_HOME=/home/$USER_NAME
 ENV PROJECT_HOME=$USER_HOME/project
 
+# Set root user
+USER root
+
 # Create non-root user
 RUN groupadd --gid $USER_GID $USER_NAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USER_NAME
-	
+
 # Force color prompt
-RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' /home/$USER_NAME/.bashrc
+RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' $USER_HOME/.bashrc
 
 # Install useful OS packages
 RUN apt-get update \
@@ -35,7 +38,7 @@ WORKDIR $PROJECT_HOME
 COPY Pipfile $PROJECT_HOME
 RUN chown -R $USER_UID:$USER_GID $PROJECT_HOME
 
-# Set user
+# Set non-root user
 USER $USER_NAME
 
 # Install project dependencies
