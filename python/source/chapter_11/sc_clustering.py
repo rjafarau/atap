@@ -41,8 +41,8 @@ def make_clusterer():
     return Pipeline(stages=stages)
 
 
-def evaluate_clustering(clusterer, predictions):
-    # Evaluate clustering
+def evaluate_clusterer(clusterer, predictions):
+    # Evaluate clusterer
     bkm = clusterer.stages[-1]
     cost = bkm.summary.trainingCost
     sizes = bkm.summary.clusterSizes
@@ -80,8 +80,8 @@ def main(sc, spark):
     # Make predictions
     predictions = clusterer.transform(corpus)
 
-    # Evaluate clustering
-    evaluate_clustering(clusterer, predictions)
+    # Evaluate clusterer
+    evaluate_clusterer(clusterer, predictions)
 
 
 if __name__ == '__main__':
