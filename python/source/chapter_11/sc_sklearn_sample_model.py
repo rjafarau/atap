@@ -1,25 +1,22 @@
 ## Spark Application - execute with spark-submit
 
 ## Imports
-from pyspark.sql import SparkSession
-from pyspark import SparkConf, SparkContext
 from sklearn.ensemble import AdaBoostClassifier
 
+from sc_template import confugure_spark
 from sc_vectorization import load_corpus, make_vectorizer
 
 
 ## Module Constants
-APP_NAME = "Scikit-Learn Sample Classifier"
-CORPUS = "text_corpus/corpus/*/*.txt"
+APP_NAME = 'Scikit-Learn Sample Classifier'
+CORPUS = '/home/python/project/data/hobbies/*/*.txt'
 
 
 def make_accuracy_closure(model, correct, incorrect):
     # model should be a broadcast variable
     # correct and incorrect should be acculumators
     def inner(rows):
-        X = []
-        y = []
-
+        X, y = [], []
         for row in rows:
             X.append(row['tfidf'])
             y.append(row['label'])
@@ -35,13 +32,24 @@ def make_accuracy_closure(model, correct, incorrect):
 
 ## Main functionality
 def main(sc, spark):
-    # Load and vectorize the corpus
-    corpus = load_corpus(sc, spark)
-    vector = make_vectorizer().fit(corpus)
-    corpus = vector.transform(corpus)
+    # Load corpus
+    corpus = load_corpus(sc, spark, CORPUS)
+
+    # Fit vectorizer pipeline
+    vectorizer = make_vectorizer()
+    vectorizer = vectorizer.fit(corpus)
+
+    # Create vectors
+    vectors = vectorizer.transform(corpus)
 
     # Get the sample from the dataset
-    sample = corpus.sample(False, 0.1).collect()
+    sample = (
+        vectors
+        .sample(withReplacement=False,
+                fraction=0.1,
+                seed=42)
+        .collect()
+    )
     X = [row['tfidf'] for row in sample]
     y = [row['label'] for row in sample]
 
@@ -60,18 +68,15 @@ def main(sc, spark):
     accuracy = make_accuracy_closure(clf, incorrect, correct)
 
     # Compute the number incorrect and correct
-    corpus.foreachPartition(accuracy)
+    vectors.foreachPartition(accuracy)
 
-    accuracy = float(correct.value) / float(correct.value + incorrect.value)
-    print("Global accuracy of model was {}".format(accuracy))
+    accuracy = correct.value / (correct.value + incorrect.value)
+    print(f'Global accuracy of model was {accuracy:.3f}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Configure Spark
-    conf  = SparkConf().setAppName(APP_NAME)
-    conf  = conf.setMaster("local[*]")
-    sc    = SparkContext(conf=conf)
-    spark = SparkSession(sc)
+    sc, spark = confugure_spark(APP_NAME)
 
     # Execute Main functionality
     main(sc, spark)
