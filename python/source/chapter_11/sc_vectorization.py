@@ -77,7 +77,7 @@ def make_vectorizer(stopwords=True, tfidf=True, n_features=4096):
 def main(sc, spark):
     # Load corpus
     corpus = load_corpus(sc, spark, CORPUS)
-    
+
     # Fit vectorizer pipeline
     vectorizer = make_vectorizer()
     vectorizer = vectorizer.fit(corpus)
