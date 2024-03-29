@@ -20,13 +20,21 @@ RUN groupadd --gid $USER_GID $USER_NAME \
 # Force color prompt
 RUN sed -i 's/^#force_color_prompt=yes/force_color_prompt=yes/' $USER_HOME/.bashrc
 
+# Add Git official PPA
+RUN apt update \
+    && apt install -yq --no-install-recommends \
+        software-properties-common \
+    && apt-add-repository ppa:git-core/ppa
+
 # Install useful OS packages
-RUN apt-get update \
-    && apt-get install -yq --no-install-recommends \
+RUN apt update \
+    && apt install -yq --no-install-recommends \
+        openssh-client \
+        git \
         htop \
         vim \
         tmux \
-    && apt-get clean \
+    && apt clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Install useful Python packages
