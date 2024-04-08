@@ -12,89 +12,61 @@ import nltk
 class SqliteCorpusReader(object):
 
     def __init__(self, path,
-                 word_tokenizer=nltk.WordPunctTokenizer(),
+                 para_tokenizer=nltk.BlanklineTokenizer(),
                  sent_tokenizer=nltk.data.load(
                      'tokenizers/punkt/english.pickle'
                  ),
+                 word_tokenizer=nltk.WordPunctTokenizer(),
                  pos_tagger=nltk.PerceptronTagger()):
-        self._cur = sqlite3.connect(path).cursor()
-        self._word_tokenizer = word_tokenizer
+        self.path = path
+        self._para_tokenizer = para_tokenizer
         self._sent_tokenizer = sent_tokenizer
+        self._word_tokenizer = word_tokenizer
         self._pos_tagger = pos_tagger
 
     def get_rows(self, query):
-        for row in self._cur.execute(query):
+        connection = sqlite3.connect(self.path)
+        cursor = connection.cursor()
+        for row in cursor.execute(query):
             yield row
+        connection.close()
 
-    def scores(self):
+    def ids_scores(self):
         """
-        Returns the review score
+        Returns the review ids and scores
         """
-        return self.get_rows('SELECT score FROM reviews')
+        return self.get_rows("""
+            SELECT DISTINCT reviewid, score FROM reviews
+        """)
 
-    def texts(self):
-        """
-        Returns the full review texts
-        """
-        return self.get_rows('SELECT content FROM content')
-
-    def ids(self):
-        """
-        Returns the review ids
-        """
-        return self.get_rows('SELECT reviewid FROM content')
-
-    def ids_and_texts(self):
+    def ids_texts(self):
         """
         Returns the review ids and texts
         """
-        return self.get_rows('SELECT * FROM content')
-
-    def scores_albums_artists_texts(self):
-        """
-        Returns a generator with each review represented as a
-        (score, album name, artist name, review text) tuple
-        """
         return self.get_rows("""
-            SELECT R.score, L.label, A.artist, C.content
-            FROM reviews R
-            JOIN labels L ON R.reviewid = L.reviewid
-            JOIN artists A ON L.reviewid = A.reviewid
-            JOIN content C ON A.reviewid = C.reviewid
+            SELECT DISTINCT reviewid, content FROM content
         """)
 
-    def albums(self):
+    def ids_texts_scores(self):
         """
-        Returns the names of albums being reviewed
+        Returns a generator with each review represented as a
+        (review id, review text, score) tuple
         """
-        return self.get_rows('SELECT * FROM labels')
-
-    def artists(self):
-        """
-        Returns the name of the artist being reviewed
-        """
-        return self.get_rows('SELECT * FROM artists')
-
-    def genres(self):
-        """
-        Returns the music genre of each review
-        """
-        return self.get_rows('SELECT * FROM genres')
-
-    def years(self):
-        """
-        Returns the publication year of each review
-
-        Note: There are many missing values
-        """
-        return self.get_rows('SELECT * FROM years')
+        return self.get_rows("""
+            SELECT DISTINCT
+                R.reviewid, C.content, R.score
+            FROM
+                reviews R
+                INNER JOIN content C
+                    ON C.reviewid = R.reviewid
+        """)
 
     def paras(self):
         """
         Returns a generator of paragraphs.
         """
-        for text in self.texts():
-            for paragraph in text:
+        for review_id, text in self.ids_texts():
+            for paragraph in self._para_tokenizer.tokenize(text):
                 yield paragraph
 
     def sents(self):
@@ -119,7 +91,7 @@ class SqliteCorpusReader(object):
         generator of paragraphs, which are lists of sentences, which in turn
         are lists of part of speech tagged words.
         """
-        for paragraph in text:
+        for paragraph in self._para_tokenizer.tokenize(text):
             yield [
                 self._pos_tagger.tag(self._word_tokenizer.tokenize(sentence))
                 for sentence in self._sent_tokenizer.tokenize(paragraph)
@@ -148,7 +120,7 @@ class SqliteCorpusReader(object):
                     words[word] += 1
 
         # Compute the number of files
-        n_fileids = sum(1 for _ in self.ids())
+        n_fileids = sum(1 for _ in self.ids_texts())
 
         # Return data structure with information
         return {
@@ -168,7 +140,7 @@ class SqliteCorpusReader(object):
         Returns a string representation of the describe command.
         """
         return (
-            "HTML corpus contains {files:,} files.\n"
+            "Corpus contains {files:,} files.\n"
             "Structured as:\n"
             "    {paras:,} paragraphs ({ppdoc:0,.3f} mean paragraphs per file)\n"
             "    {sents:,} sentences ({sppar:0,.3f} mean sentences per paragraph).\n"
