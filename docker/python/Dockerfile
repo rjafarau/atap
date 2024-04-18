@@ -34,6 +34,7 @@ RUN apt update \
         htop \
         vim \
         tmux \
+        python3-tk \
     && apt clean \
     && rm -rf /var/lib/apt/lists/*
 
