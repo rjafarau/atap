@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.pipeline import Pipeline
 from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, StratifiedKFold, KFold
 
 from reader import PickledCorpusReader
 from transformer import TextNormalizer, identity
@@ -52,7 +52,7 @@ def make_categorical(corpus):
 
 
 @timeit
-def train_model(path, model, is_continuous=True, saveto=None, cv=10):
+def train_model(path, model, is_continuous=True, saveto=None, n_splits=10):
     """
     Trains model from corpus at specified path; constructing cross-validation
     scores using the cv parameter, then fitting the model on the full data and
@@ -64,9 +64,11 @@ def train_model(path, model, is_continuous=True, saveto=None, cv=10):
     if is_continuous:
         y = continuous(corpus)
         scoring = 'r2'
+        cv = KFold(n_splits, shuffle=True, random_state=42)
     else:
         y = make_categorical(corpus)
-        scoring = 'f1_weighted'
+        scoring = 'accuracy'
+        cv = StratifiedKFold(n_splits, shuffle=True, random_state=42)
 
     # Compute cross validation scores
     scores = cross_val_score(model, X, y, cv=cv, scoring=scoring)
