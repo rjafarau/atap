@@ -5,12 +5,29 @@ import joblib
 import numpy as np
 
 from sklearn.pipeline import Pipeline
-from sklearn.neural_network import MLPRegressor, MLPClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import cross_val_score, StratifiedKFold, KFold
+
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.wrappers.scikit_learn import KerasClassifier
 
 from reader import PickledCorpusReader
 from transformer import TextNormalizer, identity
+
+N_FEATURES = 5000
+N_CLASSES = 4
+
+
+class DenseTransformer(BaseEstimator, TransformerMixin):
+    """Transforms sparse to dense"""
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        return X.toarray()
 
 
 def timeit(func):
@@ -40,6 +57,23 @@ def make_categorical(corpus):
     :return:
     """
     return np.digitize(continuous(corpus), [0.0, 3.0, 5.0, 7.0, 10.1])
+
+
+def build_dnn():
+    """
+    Create a function that returns a compiled neural network
+    :return: compiled Keras neural network model
+    """
+    nn = Sequential()
+    nn.add(Dense(500, activation='relu', input_shape=(N_FEATURES,)))
+    nn.add(Dense(150, activation='relu'))
+    nn.add(Dense(N_CLASSES, activation='softmax'))
+    nn.compile(
+        loss='categorical_crossentropy',
+        optimizer='adam',
+        metrics=['accuracy']
+    )
+    return nn
 
 
 @timeit
@@ -75,39 +109,23 @@ def train_model(path, model, is_continuous=True, saveto=None, n_splits=10):
     return scores
 
 
-def fit_mlp_classifier(path, saveto=None):
+def fit_dnn_classifier(path, saveto=None):
     model = Pipeline([
         ('norm', TextNormalizer()),
         ('tfidf', TfidfVectorizer(tokenizer=identity,
                                   token_pattern=None,
-                                  lowercase=False)),
-        ('mlp', MLPClassifier(hidden_layer_sizes=(500, 150)))
+                                  lowercase=False,
+                                  max_features=N_FEATURES)), # need to control feature count
+        ('dense', DenseTransformer()),
+        ('dnn', KerasClassifier(build_fn=build_dnn, # pass but don't call the function!
+                                epochs=200,
+                                batch_size=128))
     ])
 
     if saveto is None:
-        saveto = f'mlp_classifier_{time.time()}.pkl'
+        saveto = f'dnn_classifier_{time.time()}.pkl'
 
     scores, delta = train_model(path, model, is_continuous=False, saveto=saveto)
-    for idx, score in enumerate(scores):
-        print(f'Score on slice #{idx+1}: {score:0.3f}')
-    print(f'CV score: {scores.mean():0.3f} ± {scores.std():0.3f}')
-    print(f'Total fit time: {delta:0.3f} seconds')
-    print(f'Model saved to {saveto}')
-
-
-def fit_mlp_regressor(path, saveto=None):
-    model = Pipeline([
-        ('norm', TextNormalizer()),
-        ('tfidf', TfidfVectorizer(tokenizer=identity,
-                                  token_pattern=None,
-                                  lowercase=False)),
-        ('mlp', MLPRegressor(hidden_layer_sizes=(500, 150)))
-    ])
-
-    if saveto is None:
-        saveto = f'mlp_regressor_{time.time()}.pkl'
-
-    scores, delta = train_model(path, model, is_continuous=True, saveto=saveto)
     for idx, score in enumerate(scores):
         print(f'Score on slice #{idx+1}: {score:0.3f}')
     print(f'CV score: {scores.mean():0.3f} ± {scores.std():0.3f}')
