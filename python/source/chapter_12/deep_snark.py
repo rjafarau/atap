@@ -10,14 +10,18 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.model_selection import cross_val_score, StratifiedKFold, KFold
 
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Embedding, Dropout, LSTM
 from keras.wrappers.scikit_learn import KerasClassifier
 
 from reader import PickledCorpusReader
-from transformer import TextNormalizer, identity
+from transformer import (
+    TextNormalizer, identity,
+    KeyphraseExtractor, KeyphraseClipper
+)
 
 N_FEATURES = 5000
 N_CLASSES = 4
+DOC_LEN = 60
 
 
 class DenseTransformer(BaseEstimator, TransformerMixin):
@@ -76,6 +80,25 @@ def build_dnn():
     return nn
 
 
+def build_lstm():
+    """
+    Create a function that returns a compiled neural network
+    :return: compiled Keras neural network model
+    """
+    nn = Sequential()
+    nn.add(Embedding(N_FEATURES+1, 128, input_length=DOC_LEN))
+    nn.add(Dropout(0.4))
+    nn.add(LSTM(units=200, recurrent_dropout=0.2, dropout=0.2))
+    nn.add(Dropout(0.2))
+    nn.add(Dense(N_CLASSES, activation='softmax'))
+    nn.compile(
+        loss='categorical_crossentropy',
+        optimizer='adam',
+        metrics=['accuracy']
+    )
+    return nn
+
+
 @timeit
 def train_model(path, model, is_continuous=True, saveto=None, n_splits=10):
     """
@@ -124,6 +147,27 @@ def fit_dnn_classifier(path, saveto=None):
 
     if saveto is None:
         saveto = f'dnn_classifier_{time.time()}.pkl'
+
+    scores, delta = train_model(path, model, is_continuous=False, saveto=saveto)
+    for idx, score in enumerate(scores):
+        print(f'Score on slice #{idx+1}: {score:0.3f}')
+    print(f'CV score: {scores.mean():0.3f} ± {scores.std():0.3f}')
+    print(f'Total fit time: {delta:0.3f} seconds')
+    print(f'Model saved to {saveto}')
+
+
+def fit_lstm_classifier(path, saveto=None):
+    model = Pipeline([
+        ('extractor', KeyphraseExtractor(return_list=True)),
+        ('clipper', KeyphraseClipper(n_features=N_FEATURES,
+                                     doc_len=DOC_LEN)),
+        ('lstm', KerasClassifier(build_fn=build_lstm,
+                                 epochs=20,
+                                 batch_size=128))
+    ])
+
+    if saveto is None:
+        saveto = f'lstm_classifier_{time.time()}.pkl'
 
     scores, delta = train_model(path, model, is_continuous=False, saveto=saveto)
     for idx, score in enumerate(scores):
