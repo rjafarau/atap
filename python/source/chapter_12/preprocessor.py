@@ -1,9 +1,6 @@
 import os
-import nltk
 import pickle
 import multiprocessing as mp
-
-from slugify import slugify
 
 
 class Preprocessor(object):
@@ -21,7 +18,6 @@ class Preprocessor(object):
         The corpus is the `SqliteCorpusReader` to preprocess and pickle.
         The target is the directory on disk to output the pickled corpus to.
         """
-        self.tasks = mp.cpu_count()
         self.corpus = corpus
         self.target = target
 
@@ -45,15 +41,18 @@ class Preprocessor(object):
 
         self._target = path
 
-    def abspath(self, name):
+    def abspath(self, review_id):
         """
         Returns the absolute path to the target fileid from the corpus fileid.
         """
+        # Compute the name part
+        name = str(review_id)
+
         # Create the pickle file extension
-        fname  = str(name) + '.pickle'
+        basename = name + '.pickle'
 
         # Return the path to the file relative to the target.
-        return os.path.normpath(os.path.join(self.target, fname))
+        return os.path.normpath(os.path.join(self.target, basename))
 
     def tokenize(self, text):
         """
@@ -61,12 +60,9 @@ class Preprocessor(object):
         generator of paragraphs, which are lists of sentences, which in turn
         are lists of part of speech tagged words.
         """
-        yield [
-            nltk.pos_tag(nltk.wordpunct_tokenize(sent))
-            for sent in nltk.sent_tokenize(text)
-        ]
+        return self.corpus.tokenize(text)
 
-    def process(self, score_album_artist_text):
+    def process(self, id_text_score):
         """
         For a single file does the following preprocessing work:
             1. Checks the location on disk to make sure no errors occur.
@@ -77,14 +73,10 @@ class Preprocessor(object):
             6. Writes the document as a pickle to the target location.
         This method is called multiple times from the transform runner.
         """
-        score, album, artist, text = score_album_artist_text
+        review_id, text, score = id_text_score
 
         # Compute the outpath to write the file to.
-        if album:
-            name = album+'-'+artist
-        else:
-            name = artist
-        target = self.abspath(slugify(name))
+        target = self.abspath(review_id)
         parent = os.path.dirname(target)
 
         # Make sure the directory exists
@@ -98,8 +90,10 @@ class Preprocessor(object):
             )
 
         # Create a data structure for the pickle
-        document = list(self.tokenize(text))
-        document.append(score)
+        document = {
+            'text': list(self.tokenize(text)),
+            'score': score
+        }
 
         # Open and serialize the pickle to disk
         with open(target, 'wb') as f:
@@ -122,60 +116,9 @@ class Preprocessor(object):
         if not os.path.exists(self.target):
             os.makedirs(self.target)
 
-        for score_album_artist_text in self.corpus.scores_albums_artists_texts():
-            yield self.process(score_album_artist_text)
-
-
-class ParallelPreprocessor(Preprocessor):
-    """
-    Implements multiprocessing to speed up the preprocessing efforts.
-    """
-
-    def __init__(self, *args, **kwargs):
-        """
-        Get parallel-specific arguments and then call super.
-        """
-        self.tasks = mp.cpu_count()
-        super(ParallelPreprocessor, self).__init__(*args, **kwargs)
-
-    def on_result(self, result):
-        """
-        Appends the results to the master results list.
-        """
-        self.results.append(result)
-
-    def transform(self):
-        """
-        Create a pool using the multiprocessing library, passing in
-        the number of cores available to set the desired number of
-        processes.
-        """
-        # Make the target directory if it doesn't already exist
-        if not os.path.exists(self.target):
-            os.makedirs(self.target)
-
-        # Reset the results
-        self.results = []
-
         # Create a multiprocessing pool
-        pool  = mp.Pool(processes=self.tasks)
-        tasks = [
-            pool.apply_async(self.process, (score_album_artist_text,), callback=self.on_result)
-            for score_album_artist_text in self.corpus.scores_albums_artists_texts()
-        ]
-
-        # Close the pool and join
-        pool.close()
-        pool.join()
-
-        return self.results
-
-
-if __name__ == '__main__':
-
-    from reader import SqliteCorpusReader
-
-    corpus = SqliteCorpusReader('../database.sqlite')
-    transformer = Preprocessor(corpus, '../review_corpus_proc')
-    docs = transformer.transform()
-    print(len(list(docs)))
+        with mp.Pool() as pool:
+            return pool.map(
+                self.process,
+                self.corpus.ids_texts_scores()
+            )
