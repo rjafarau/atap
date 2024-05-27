@@ -25,6 +25,8 @@ python-Levenshtein = "==0.20.9"
 yellowbrick = "==1.5"
 pytest = "==7.4.0"
 pyspark = "==3.5.1"
+h5py = "==3.10.0"
+tensorflow = "==2.12.1"
 
 [requires]
 python_version = "3.8.10"

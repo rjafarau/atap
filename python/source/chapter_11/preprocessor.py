@@ -1,5 +1,6 @@
 import os
 import uuid
+import shutil
 import pickle
 import multiprocessing as mp
 
